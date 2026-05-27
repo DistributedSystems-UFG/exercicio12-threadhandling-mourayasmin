@@ -1,3 +1,5 @@
+//checar periodicamente se a thread nao foi interrompida. se foi, ela termina (nao excecao)
+
 public class SimpleThreads {
 
     // Display a message, preceded by the name of the current thread
@@ -28,6 +30,22 @@ public class SimpleThreads {
         }
     }
 
+    public static class HeavyLoop
+        implements Runnable {
+        public void run() {
+            HeavyMethod();
+        }
+
+        public void HeavyMethod() {
+            for(int i = 0; i < 100000000; i++) {
+                if(Thread.currentThread().isInterrupted()) {
+                    threadMessage("HeavyMethod was interrupted at iteration: " + i);
+                    return;
+                }
+            }
+        }
+    }
+
     public static void main(String args[])
         throws InterruptedException {
 
@@ -44,28 +62,32 @@ public class SimpleThreads {
             }
         }
 
-        threadMessage("Starting MessageLoop thread");
+        SimpleThreads.threadMessage("Starting MessageLoop thread");
         long startTime = System.currentTimeMillis();
-        Thread t = new Thread(new MessageLoop());
+        Thread t = new Thread(new SimpleThreads.MessageLoop());
+        Thread t1 = new Thread((new SimpleThreads.HeavyLoop()));
 
 	// Put the MessageLoop thread to run
         t.start();
+        t1.start();
 
-        threadMessage("Waiting for MessageLoop thread to finish");
-	
+        SimpleThreads.threadMessage("Waiting for MessageLoop thread to finish");
+
         // loop until MessageLoop thread exits
-        while (t.isAlive()) {
-            threadMessage("Still waiting...");
+        while (t.isAlive() || t1.isAlive()) {
+            SimpleThreads.threadMessage("Still waiting...");
             // Wait maximum of 1 second for MessageLoop thread to finish
             t.join(1000);
-            if (((System.currentTimeMillis() - startTime) > patience) && t.isAlive()) {
-                threadMessage("Tired of waiting!");
+            if (((System.currentTimeMillis() - startTime) > patience) && (t.isAlive() || t1.isAlive())) {
+                SimpleThreads.threadMessage("Tired of waiting!");
 		// Force the interruption of the MainLoop thread
                 t.interrupt();
-                // ...and wait for it to finish -- shouldn't be long now 
+                t1.interrupt();
+                // ...and wait for it to finish -- shouldn't be long now
                 t.join();
+                t1.join();
             }
         }
-        threadMessage("Finally!");
+        SimpleThreads.threadMessage("Finally!");
     }
 }

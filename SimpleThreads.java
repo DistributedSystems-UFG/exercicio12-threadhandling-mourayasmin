@@ -37,7 +37,9 @@ public class SimpleThreads {
         }
 
         public void HeavyMethod() {
+            double result = 0;
             for(int i = 0; i < 100000000; i++) {
+                result += Math.sqrt(i) * Math.sin(i);
                 if(Thread.currentThread().isInterrupted()) {
                     threadMessage("HeavyMethod was interrupted at iteration: " + i);
                     return;
@@ -63,6 +65,7 @@ public class SimpleThreads {
         }
 
         SimpleThreads.threadMessage("Starting MessageLoop thread");
+        SimpleThreads.threadMessage("Starting HeavyLoop thread");
         long startTime = System.currentTimeMillis();
         Thread t = new Thread(new SimpleThreads.MessageLoop());
         Thread t1 = new Thread((new SimpleThreads.HeavyLoop()));
@@ -72,6 +75,7 @@ public class SimpleThreads {
         t1.start();
 
         SimpleThreads.threadMessage("Waiting for MessageLoop thread to finish");
+        SimpleThreads.threadMessage("Waiting for HeavyLoop thread to finish");
 
         // loop until MessageLoop thread exits
         while (t.isAlive() || t1.isAlive()) {
